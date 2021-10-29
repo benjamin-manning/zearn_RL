@@ -1,3 +1,3 @@
 # Zearn Data
 
-Code for reinforcement learning project
+Code for reinforcement learning paper
