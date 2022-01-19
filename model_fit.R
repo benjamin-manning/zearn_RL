@@ -1,7 +1,7 @@
 library("rstan") # observe startup messages
 library("tidyverse")
 
-setwd("~/Desktop/zearn/marcos_RL_Zearn")
+setwd("~/Desktop/zearn/zearn_RL")
 load("RL_data_Zearn.Rdata")
 load("RL_data_Zearn-notscaled.Rdata")
 
