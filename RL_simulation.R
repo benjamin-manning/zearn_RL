@@ -71,18 +71,22 @@ for (arm in banditArms) {
 
 teachers = matrix(data = NA, nrow = nteachers, ncol = nArms+1)
 
-teachers_final_sim = data.frame(matrix(data = NA, nrow = nteachers*nweeks, ncol = nArms+9))
+teachers_final_sim = data.frame(matrix(data = NA, nrow = nteachers*nweeks, ncol = nArms+12))
 
 for (teacher in 1:nteachers){
   
-  #Cost multiplier for each teacher 
-  cost_multiplier = rexp(n = 1, rate = 1)
+  
+  #Cost for each arm
+  cost1 = 0
+  cost2 = runif(1, .5, 1)
+  cost3 = runif(1, cost2, 2)
+  cost4 = runif(1, cost3, 3)
   
   #alpha for each teacher
-  alpha = rexp(n = 1, rate = 30)
+  alpha = runif(1,0.000001,1)
   
   #beta for each teacher
-  beta = rexp(n = 1, rate = .15)
+  beta = runif(1,0.01,40)
 
   
   for (week in 1:nweeks) {
@@ -131,7 +135,7 @@ for (teacher in 1:nteachers){
       arm1_reward_base = rnorm(1, mean = 0.5, sd = 1) 
       arm1_reward_base = ifelse(arm1_reward_base < 0, 0, arm1_reward_base)
       
-      arm1_cost = 0*cost_multiplier
+      arm1_cost = cost1
       
       #reward is the probability times that reward base - 1. could do binomial * 2; reward, or reward * probability
       #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]]) * arm1_reward_base arm1 - arm1_cost
@@ -145,7 +149,7 @@ for (teacher in 1:nteachers){
       arm2_reward_base = ifelse(arm2_reward_base < 0, 0, arm2_reward_base)
       
       #making fixed to start - can add variability if we want
-      arm2_cost = 0.5*cost_multiplier
+      arm2_cost = cost2
       
       #reward is the probability times that reward base - 1. could do binomial * 2; reward, or reward * probability
       #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]]) * arm2_reward_base - arm2_cost
@@ -159,7 +163,7 @@ for (teacher in 1:nteachers){
       arm3_reward_base = ifelse(arm3_reward_base < 0, 0, arm3_reward_base)
       
       #making fixed to start - can add variability if we want
-      arm3_cost = 1*cost_multiplier
+      arm3_cost = cost3
       
       #reward is the probability times that reward base - 1. could do binomial * 2; reward, or reward * probability
       #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]]) * arm3_reward_base - arm3_cost = 1.5
@@ -173,7 +177,7 @@ for (teacher in 1:nteachers){
       arm4_reward_base = ifelse(arm4_reward_base < 0, 0, arm4_reward_base)
       
       #making fixed to start - can add variability if we want
-      arm4_cost = 2*cost_multiplier
+      arm4_cost = cost4
       
       #reward is the probability times that reward base - 1. could do binomial * 2; reward, or reward * probability
       #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]]) * arm34reward_base - arm4_cost
@@ -215,7 +219,7 @@ for (teacher in 1:nteachers){
   teachers[teacher,] = c(teacher, weekChoiceProbs[40,])
   lower_bound = 1+(40*(teacher-1))
   upper_bound = 40+(40*(teacher-1))
-  teachers_final_sim[c(lower_bound:upper_bound),] = c(teacher, alpha, beta, cost_multiplier, ChoiceProbs_df, df)
+  teachers_final_sim[c(lower_bound:upper_bound),] = c(teacher, alpha, beta, cost1, cost2, cost3, cost4, ChoiceProbs_df, df)
 }
 
 # WRIT THIS DF FOR MARCOS TO RUN DATA
@@ -224,7 +228,7 @@ for (teacher in 1:nteachers){
 
 teachers = data.frame(teachers)
 colnames(teachers) = c('Teacher', 'Arm1', 'Arm2', 'Arm3', 'Arm4')
-colnames(teachers_final_sim) = c('teacher', 'alpha', 'beta', 'cost_multiplier', 'Arm1', 'Arm2', 'Arm3', 'Arm4','week', 'effort', 'reward', 'badges', 'cost')
+colnames(teachers_final_sim) = c('teacher', 'alpha', 'beta', 'cost1','cost2', 'cost3', 'cost4', 'Arm1', 'Arm2', 'Arm3', 'Arm4','week', 'effort', 'reward', 'badges', 'cost')
 
 
 #THIS IS THE SIMULATED DATA@
