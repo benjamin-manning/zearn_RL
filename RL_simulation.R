@@ -29,25 +29,7 @@ nteachers = 1000
 nArms <- 4 #try a different here instead
 banditArms <- c(1:nArms)
 
-#deal with greater than 0 or less than 1
-arm1_dist = rnorm(1, mean = .2, sd = .1)
-arm1_dist = ifelse(arm1_dist < 0, 0, arm1_dist )
-arm1_dist = ifelse(arm1_dist > 1, 1, arm1_dist )
-
-arm2_dist = rnorm(1, mean = .35, sd = .125)
-arm2_dist = ifelse(arm2_dist < 0, 0, arm2_dist )
-arm2_dist = ifelse(arm2_dist > 1, 1, arm2_dist )
-
-arm3_dist = rnorm(1, mean = .5, sd = .2)
-arm3_dist = ifelse(arm3_dist < 0, 0, arm3_dist )
-arm3_dist = ifelse(arm3_dist > 1, 1, arm3_dist )
-
-arm4_dist = rnorm(1, mean = .7, sd = .25)
-arm4_dist = ifelse(arm4_dist < 0, 0, arm4_dist )
-arm4_dist = ifelse(arm4_dist > 1, 1, arm4_dist )
-
-armRewardProbabilities <- c(arm1_dist,arm2_dist, arm3_dist,arm4_dist) #each arm needs its own reward probability
-
+#from original code
 #armRewardProbabilities <- c(0.1, 0.3, 0.5,0.8) #each arm needs its own reward probability
 
 # alpha = .02
@@ -107,7 +89,8 @@ for (teacher in 1:nteachers){
     # choose action given choice probabilities, save in choices vector
     choices[week] <- sample(banditArms, size = 1, replace = FALSE, prob = choiceProbs)
     
-    #sampling the probabilities every single time
+    #sampling the probabilities every single teacher
+    #deal with greater than 0 or less than 1
     arm1_dist = rnorm(1, mean = .2, sd = .1)
     arm1_dist = ifelse(arm1_dist < 0, 0, arm1_dist )
     arm1_dist = ifelse(arm1_dist > 1, 1, arm1_dist )
