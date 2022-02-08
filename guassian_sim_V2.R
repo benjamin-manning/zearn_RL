@@ -1,17 +1,30 @@
 library(tidyverse)
 library(reshape2)
 
-# SAVE THE MUS AN DSIGMAS
 
-#w is 4 value vector
+# 1. Initialize: alpha_theta >0, alpha_w > 0; theta_mu, theta_sigma, w (vectors size 4); 
+# S (which is the vector size 4 we call x’s — badges, tower alerts, squares…)
 
-#2 alphas 0 to 1
+# 2. Calculate mu and theta. Sample minutes from the resulting normal distribution.
 
-#theta_mu, theta_sig, w (normal over 0) S is X's
+#3. calculate delta = badges for the NEXT week + gamma * 
+#(linear combination of w with x’s for the NEXT week) - 
+#(linear combination of w with x’s for the THIS week)
+#(oh and gamma = 0.95)
 
-#A is minutes on zearn (normal)
+#4. update w. Like so: w = w + alpha_w * delta * w  
+#[this is like the updating function we did with each state before]
 
-#gamma discount factor is .95
+#5. update theta_mu. Like so: theta_mu = theta_mu + alpha_theta * delta^(week #) * 
+#1/(sigma)^2 * (minutes - mu) * x’s  [this is the first gradient formula from the picture]
+
+#6. update theta_sigma. Like so: theta_sigma = theta_sigma + alpha_theta * delta^(week #) * 
+#((minutes - mu)^2/(sigma)^2 - 1) * x’s  [this is the second gradient formula from the picture]
+
+# 7. Loop accordingly until the end of the 40 weeks
+
+
+
 
 #data generation specifications
 nweeks <- 40
