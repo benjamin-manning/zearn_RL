@@ -28,22 +28,24 @@ w_df = matrix(data = NA, nrow = nteachers*nweeks , ncol = 6)
 colnames(w_df) = c('week', 'teacher', 'w1', 'w2', 'w3', 'w4')
 
 #FIX HERE
-
 sim_mins_df = matrix(data = NA, nrow = nteachers , ncol = 40)
 # 2. Calculate mu and theta. Sample minutes from the resulting normal distribution.
 
 #iterating through teachers
 for (teacher in 1:nteachers){
+  #DELETE teacher == whatver
   teacher = 1
   
   #selecting thetas MAKE ALL THESE 0 to START
   mu_theta_df[40* (teacher-1)+1,]  = c(1, teacher, 0, 0, 0, 0)
-  sig_theta_df[40*(teacher-1)+1,]  = c(1, teacher, 0, 0, 0, 0)
+  sig_theta_df[40*(teacher-1)+1,]  = c(1, teacher, .001, .001, .001, .001)
   
   #starting state variables for each teacher (the same?)
-  last_badges = 2
-  last_tower_alerts = 6
-  state_var_df[40*(teacher-1)+1,] = c(1, teacher, last_tower_alerts, last_badges, last_tower_alerts^2, last_badges^2)
+  badges = 2
+  tower_alerts = 6
+  
+  #adding first week state
+  state_var_df[40*(teacher-1)+1,] = c(1, teacher, tower_alerts, badges, tower_alerts^2, badges^2)
   
   #initializing w for each teacher
   w_df[40*(teacher-1)+1,]= c(1, teacher,0, 0, 0, 0)
@@ -53,32 +55,38 @@ for (teacher in 1:nteachers){
   
   #iterating through weeks 
   for (week in 2:nweeks) {
+    #DELETE WEEk == whatver
     week = 2
-    #hyperparameters get big with the growing weeks
-    #updating badges
-    last_badges  = rnorm(1, mean = 2, sd = .5)
-    last_badges = ifelse(last_badges < 0, 0, last_badges)
-    last_tower_alerts  = rnorm(1, mean = 6, sd = 1)
-    last_tower_alerts= ifelse(last_tower_alerts < 0, 0, last_tower_alerts)
+
+    #generatin badges
+    badges  = rnorm(1, mean = 2, sd = .5)
+    #keeping badges above 0
+    badges = ifelse(badges < 0, 0, badges)
+    #generating tower alerts
+    tower_alerts  = rnorm(1, mean = 6, sd = 1)
+    #keeping tower alerts above 0
+    tower_alerts= ifelse(tower_alerts < 0, 0, tower_alerts)
     
-    #how do we get badges???
-    state_var_df[40*(teacher-1)+week,] = c(week, teacher, last_tower_alerts, last_badges, last_tower_alerts^2, last_badges^2)
+    #update this weeks badges
+    state_var_df[40*(teacher-1)+week,] = c(week, teacher, tower_alerts, badges, tower_alerts^2, badges^2)
     
-    #final sim mu
-    
+    #final sim mu (linear combination) - last weeks mu and last weeks states
+  
     mu = as.numeric(mu_theta_df[40*(teacher-1)+week-1,3]*state_var_df[40*(teacher-1)+week-1,3]) +
       as.numeric(mu_theta_df[40*(teacher-1)+week-1,4]*state_var_df[40*(teacher-1)+week-1,4]) +
       as.numeric(mu_theta_df[40*(teacher-1)+week-1,5]*state_var_df[40*(teacher-1)+week-1,5]) +
       as.numeric(mu_theta_df[40*(teacher-1)+week-1,6]*state_var_df[40*(teacher-1)+week-1,6]) 
     
-    #final sim sigma (linear combination)
+    #final sim sigma (linear combination) - last weeks sigmas and last weeks states
     sigma = exp(as.numeric(sig_theta_df[40*(teacher-1)+week-1,3]*state_var_df[40*(teacher-1)+week-1,3]) +
       as.numeric(sig_theta_df[40*(teacher-1)+week-1,4]*state_var_df[40*(teacher-1)+week-1,4]) +
       as.numeric(sig_theta_df[40*(teacher-1)+week-1,5]*state_var_df[40*(teacher-1)+week-1,5]) +
       as.numeric(sig_theta_df[40*(teacher-1)+week-1,6]*state_var_df[40*(teacher-1)+week-1,6]))
     
+    #generating minutes
     minutes = rnorm(1, mean = mu, sd = sigma)
-    minutes = ifelse(minutes < 0, 0, minutes)
+    #making minutes greater than 0
+    #minutes = ifelse(minutes < 0, 0, minutes)
     
     #simualted minutes per wee
     sim_mins_df[teacher,week] = minutes
@@ -88,24 +96,39 @@ for (teacher in 1:nteachers){
     #(linear combination of w with x’s for the THIS week)
     #(oh and gamma = 0.95)
     
-    delta = last_badges + 
-      gamma * state_var_df[40*(teacher-1)+week,c(2:5)] %*% w_df[40*(teacher-1)+week-1,c(2:5)] - 
-      state_var_df[40*(teacher-1)+week-1,c(2:5)] %*% w_df[40*(teacher-1)+week-1,c(2:5)]
+    delta = badges + gamma * 
+      #this weeks states and last weeks w
+      state_var_df[40*(teacher-1)+week,c(3:6)] %*% w_df[40*(teacher-1)+week-1,c(3:6)] - 
+      #last weeks states and last weeks w
+      state_var_df[40*(teacher-1)+week-1,c(3:6)] %*% w_df[40*(teacher-1)+week-1,c(3:6)]
     
     delta = delta[[1]]
     
     #4. update w. Like so: w = w + alpha_w * delta * X 
     #[this is like the updating function we did with each state before]
     w_df[40*(teacher-1)+week,c(1:2)] = c(week, teacher)
-    w_df[40*(teacher-1)+week,c(3:6)] = as.vector(w_df[40*(teacher-1)+week-1,c(3:6)]) + alpha_w * delta * as.vector(state_var_df[40*(teacher-1)+week-1,c(3:6)])
+    
+    w_df[40*(teacher-1)+week,c(3:6)] = 
+      #lasts weeks w
+      as.vector(w_df[40*(teacher-1)+week-1,c(3:6)]) +
+      alpha_w * delta * 
+      #last weeks states
+      as.vector(state_var_df[40*(teacher-1)+week-1,c(3:6)])
 
     
     #5. update theta_mu. Like so: theta_mu = theta_mu + alpha_theta * delta*gamma^(week -1#) * 
     #1/(sigma)^2 * (minutes - mu) * x’s (IS THIS WEEK -1 ???)  [this is the first gradient formula from the picture]
-    mu_theta_df[40*(teacher-1)+1 + (week-1),c(1:2)] = c(week, teacher)
+    mu_theta_df[40*(teacher-1)+1 + (week-1), c(1:2)] = c(week, teacher)
     
-    mu_theta_df[40*(teacher-1)+1 + (week-1),c(3:6)] = mu_theta_df[40*(teacher-1)+1 + (week-1)-1,c(3:6)] + alpha_theta * delta*gamma^(week-1) *
-      1/(sigma^2) * (minutes - mu) *state_var_df[40*(teacher-1)+1 + (week-1),c(2:5)]
+    #updating this weeks mu
+    mu_theta_df[40*(teacher-1)+1 + (week-1), c(3:6)] =
+      #last week's mu
+      mu_theta_df[40*(teacher-1) + (week-1),c(3:6)] + 
+      #gamma is to the last weeks power
+      alpha_theta * delta*gamma^(week-1) *
+      1/(sigma^2) * (minutes - mu) *
+      #last weeks states
+      state_var_df[40*(teacher-1) + (week-1),c(3:6)]
     
     #6. update theta_sigma. Like so: theta_sigma = theta_sigma + alpha_theta * delta*gamma^(week -1 #) * 
     #((minutes - mu)^2/(sigma)^2 - 1) * x’s  [this is the second gradient formula from the picture]'
@@ -113,8 +136,15 @@ for (teacher in 1:nteachers){
     #WHAT TO DO ABOUT SIGMA STARTING AT 0???
     sig_theta_df[40*(teacher-1)+1 + (week-1),c(1:2)] = c(week, teacher)
     
-    sig_theta_df[40*(teacher-1)+1 + (week-1),c(3:6)] = sig_theta_df[40*(teacher-1)+1 + (week-1)-1,c(3:6)] + alpha_theta * delta*gamma^(week-1) *
-     ((minutes-mu)^2/(((sigma^2)-1))) *state_var_df[40*(teacher-1)+1 + (week-1),c(2:5)]
+    sig_theta_df[40*(teacher-1)+1 + (week-1),c(3:6)] = 
+      #last weeks sigma
+      sig_theta_df[40*(teacher-1) + (week-1),c(3:6)] + 
+      #gamma is to the last weeks power
+      alpha_theta * delta * gamma^(week-1) *
+      #chilling
+     (((minutes-mu)^2/(sigma^2)) - 1) * 
+      
+      state_var_df[40*(teacher-1) + (week-1),c(2:5)]
   }
   
 }
