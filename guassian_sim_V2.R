@@ -4,10 +4,14 @@ library(reshape2)
 nweeks <- 40
 nteachers = 100
 
+
+### DON'T DO THIS - LOOK AT SLACK!!!!!
 #0. inflated tobit - formula changed - on hold
 #1. two armed simple
 #2. bernoulli do the indicator variable
 #3. truncated normal
+
+
 
 
 # 1. Initialize: alpha_theta >0, alpha_w > 0; theta_mu, theta_sigma, w (vectors size 4); 
