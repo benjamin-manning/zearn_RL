@@ -26,7 +26,7 @@ library(reshape2)
 #data generation specifications
 nweeks <- 40
 nteachers = 1000
-nArms <- 4 #try a different here instead
+nArms <- 2 #try a different here instead
 banditArms <- c(1:nArms)
 
 #from original code
@@ -61,8 +61,6 @@ for (teacher in 1:nteachers){
   #Cost for each arm
   cost1 = 0
   cost2 = runif(1, .5, 1)
-  cost3 = runif(1, cost2, 2)
-  cost4 = runif(1, cost3, 3)
   
   #alpha for each teacher
   alpha = runif(1,0.000001,1)
@@ -96,18 +94,11 @@ for (teacher in 1:nteachers){
     arm1_dist = ifelse(arm1_dist > 1, 1, arm1_dist )
     arm1_dist
     
-    arm2_dist = rnorm(1, mean = .35, sd = .125)
+    arm2_dist = rnorm(1, mean = .5, sd = .125)
     arm2_dist = ifelse(arm2_dist < 0, 0, arm2_dist )
     arm2_dist = ifelse(arm2_dist > 1, 1, arm2_dist )
+    armRewardProbabilities <- c(arm1_dist, arm2_dist)
     
-    arm3_dist = rnorm(1, mean = .5, sd = .2)
-    arm3_dist = ifelse(arm3_dist < 0, 0, arm3_dist )
-    arm3_dist = ifelse(arm3_dist > 1, 1, arm3_dist )
-    
-    arm4_dist = rnorm(1, mean = .7, sd = .25)
-    arm4_dist = ifelse(arm4_dist < 0, 0, arm4_dist )
-    arm4_dist = ifelse(arm4_dist > 1, 1, arm4_dist )
-    armRewardProbabilities <- c(arm1_dist, arm2_dist, arm3_dist, arm4_dist)
     
     #given bandit arm choice, get reward outcome (based on armRewardProbabilities)
     #reward depends on the amount of effort given
@@ -128,7 +119,7 @@ for (teacher in 1:nteachers){
     }
     else if (armRewardProbabilities[choices[week]] == arm2_dist){
       #setting reward from Q1 badges per week
-      arm2_reward_base = rnorm(1, mean = 1.1, sd = 1) 
+      arm2_reward_base = rnorm(1, mean = 3, sd = 1) 
       arm2_reward_base = ifelse(arm2_reward_base < 0, 0, arm2_reward_base)
       
       #making fixed to start - can add variability if we want
@@ -139,34 +130,6 @@ for (teacher in 1:nteachers){
       rewards[week] <- arm2_reward_base*armRewardProbabilities[choices[week]] - arm2_cost
       badges[week] = arm2_reward_base*armRewardProbabilities[choices[week]]
       cost[week] = arm2_cost
-    }
-    else if (armRewardProbabilities[choices[week]] == arm3_dist){
-      #setting reward from median badges per week
-      arm3_reward_base = rnorm(1, mean = 2.477, sd = 2.0) 
-      arm3_reward_base = ifelse(arm3_reward_base < 0, 0, arm3_reward_base)
-      
-      #making fixed to start - can add variability if we want
-      arm3_cost = cost3
-      
-      #reward is the probability times that reward base - 1. could do binomial * 2; reward, or reward * probability
-      #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]]) * arm3_reward_base - arm3_cost = 1.5
-      rewards[week] <- arm3_reward_base*armRewardProbabilities[choices[week]] - arm3_cost
-      badges[week] = arm3_reward_base*armRewardProbabilities[choices[week]]
-      cost[week] = arm3_cost
-    }
-    else if (armRewardProbabilities[choices[week]] == arm4_dist){
-      #setting reward from Q3badges per week
-      arm4_reward_base = rnorm(1, mean = 3.5, sd = 2) 
-      arm4_reward_base = ifelse(arm4_reward_base < 0, 0, arm4_reward_base)
-      
-      #making fixed to start - can add variability if we want
-      arm4_cost = cost4
-      
-      #reward is the probability times that reward base - 1. could do binomial * 2; reward, or reward * probability
-      #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]]) * arm34reward_base - arm4_cost
-      rewards[week] <- arm4_reward_base*armRewardProbabilities[choices[week]] - arm4_cost
-      badges[week] = arm4_reward_base*armRewardProbabilities[choices[week]]
-      cost[week] = arm4_cost
     }
     
     #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]])
@@ -202,7 +165,7 @@ for (teacher in 1:nteachers){
   teachers[teacher,] = c(teacher, weekChoiceProbs[40,])
   lower_bound = 1+(40*(teacher-1))
   upper_bound = 40+(40*(teacher-1))
-  teachers_final_sim[c(lower_bound:upper_bound),] = c(teacher, alpha, beta, cost1, cost2, cost3, cost4, ChoiceProbs_df, df)
+  teachers_final_sim[c(lower_bound:upper_bound),] = c(teacher, alpha, beta, data.frame(choices), cost1, cost2, ChoiceProbs_df, df)
 }
 
 # WRIT THIS DF FOR MARCOS TO RUN DATA
@@ -210,21 +173,19 @@ for (teacher in 1:nteachers){
 # write.csv(df,fileName, row.names = FALSE)
 
 teachers = data.frame(teachers)
-colnames(teachers) = c('Teacher', 'Arm1', 'Arm2', 'Arm3', 'Arm4')
-colnames(teachers_final_sim) = c('teacher', 'alpha', 'beta', 'cost1','cost2', 'cost3', 'cost4', 'Arm1', 'Arm2', 'Arm3', 'Arm4','week', 'effort', 'reward', 'badges', 'cost')
+colnames(teachers) = c('Teacher', 'Arm1', 'Arm2')
+colnames(teachers_final_sim) = c('teacher', 'alpha', 'beta', 'arm_choice', 'cost1','cost2', 'Arm1', 'Arm2', 'week', 'effort', 'reward', 'badges', 'cost')
 
 
 #THIS IS THE SIMULATED DATA@
 write.csv(teachers_final_sim, 'teacher_sim.csv', row.names = FALSE)
 
-teachers = teachers[order(teachers[,5], decreasing = FALSE),]
+teachers = teachers[order(teachers[,2], decreasing = FALSE),]
 teachers$Teacher = 1:nteachers
 
 ggplot(teachers) +
   geom_point(aes(x = Teacher, y = Arm1, color = 'Arm1')) +
   geom_point(aes(x = Teacher, y = Arm2, color = 'Arm2')) +
-  geom_point(aes(x = Teacher, y = Arm3, color = 'Arm3')) +
-  geom_point(aes(x = Teacher, y = Arm4, color = 'Arm4')) +
   labs(y= 'P')
 
 #plot Q values over time

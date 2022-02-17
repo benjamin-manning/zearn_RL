@@ -93,6 +93,10 @@ for (teacher in 1:nteachers){
       as.numeric(sig_theta_df[40*(teacher-1)+week-1,6]*state_var_df[40*(teacher-1)+week-1,6]))
     
     #generating minutes
+    #add a BINOMIAL DECISION HERE????????
+    #SHOULD I MAKE THIS A FUNCTION OF MU AND SIGMA????? HOW DO I DO THIS????
+    as.numeric(rbernoulli(1, .5))
+    
     minutes = rnorm(1, mean = mu, sd = sigma)
     #making minutes greater than 0
     #minutes = ifelse(minutes < 0, 0, minutes)
