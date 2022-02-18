@@ -134,11 +134,18 @@ for (teacher in 1:nteachers){
     
     #rewards[week] <- rbinom(1,size = 1,prob = armRewardProbabilities[choices[week]])
     
-    #given reward outcome, update Q values
-    currentQs[choices[week]] <- currentQs[choices[week]] + alpha * (rewards[week] - currentQs[choices[week]])
-    
-    #save Q values in matrix of all Q-values
-    weekQs[week,] <- currentQs
+    #if we chose 0
+    if (choices[week] == 1){
+      #given reward outcome, update Q values
+      currentQs[choices[week]] <- currentQs[choices[week]] + alpha * (rewards[week] - currentQs[choices[week]])
+      
+      #save Q values in matrix of all Q-values
+      weekQs[week,] <- currentQs
+    }
+    else {
+      
+    }
+ 
     
     #combine choices and rewards into dataframe
     df <- data.frame(choices, rewards, badges, cost)
@@ -193,4 +200,5 @@ ggplot(teachers) +
 #   #geom_smooth(se=F) +
 #   geom_line(size = .5)+
 #   ggtitle("Probability of Choosing Arm by week")
+mean(rnorm(40, mean = .2, sd = .1))
 
